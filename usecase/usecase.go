@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"repo-pattern-w-trx-management/model"
+	repository "repo-pattern-w-trx-management/repo"
 )
 
 type repo interface {
@@ -12,11 +13,13 @@ type repo interface {
 }
 
 type usecase struct {
-	r repo
+	r  repo
+	ar repository.AtomicRepository
 }
 
-func NewUsecase(r repo) *usecase {
+func NewUsecase(r repo, ar repository.AtomicRepository) *usecase {
 	return &usecase{
-		r: r,
+		r:  r,
+		ar: ar,
 	}
 }
