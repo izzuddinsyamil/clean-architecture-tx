@@ -22,7 +22,8 @@ func (r *repo) GetUser(ctx context.Context) (u []model.User, err error) {
 		tracer = "repo.GetUser"
 		q      = `
 		select id, name, balance
-		from users`
+		from users
+		order by id asc`
 	)
 
 	rows, err := r.db.QueryContext(ctx, q)
