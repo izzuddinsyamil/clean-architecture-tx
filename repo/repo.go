@@ -13,7 +13,6 @@ import (
 type Repository interface {
 	Atomic(ctx context.Context, fn func(r Repository) error) error
 	GetUser(ctx context.Context) (u []model.User, err error)
-	GetUserById(ctx context.Context, id int) (u model.User, err error)
 	CreateUser(ctx context.Context, name string, balance int) (err error)
 	DeductBalance(ctx context.Context, userId, amount int) (err error)
 	AddBalance(ctx context.Context, userId, amount int) (err error)
@@ -97,28 +96,6 @@ func (r *repo) GetUser(ctx context.Context) (u []model.User, err error) {
 		u = append(u, user)
 	}
 
-	return
-}
-
-func (r *repo) GetUserById(ctx context.Context, id int) (u model.User, err error) {
-	var (
-		tracer = "repo.GetUserById"
-		q      = `
-		select id, name, balance
-		from users
-		where id = $1`
-	)
-
-	err = r.conn.QueryRowContext(ctx, q, id).Scan(&u.Id, &u.Name, &u.Balance)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			err = stacktrace.PropagateWithCode(err, errCode.EcodeNotFound, tracer)
-			return
-		}
-
-		err = stacktrace.PropagateWithCode(err, errCode.EcodeInternal, tracer)
-		return
-	}
 	return
 }
 
