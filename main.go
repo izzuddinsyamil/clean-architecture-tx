@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os"
 	"repo-pattern-w-trx-management/handler"
-	"repo-pattern-w-trx-management/repo"
+	repository "repo-pattern-w-trx-management/repo"
 	"repo-pattern-w-trx-management/route"
 	"repo-pattern-w-trx-management/usecase"
 
@@ -29,8 +29,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	repo := repo.NewRepo(db)
-	uc := usecase.NewUsecase(repo)
+	repo := repository.NewRepo(db)
+	atomicRepo := repository.NewAtomicRepo(db)
+	uc := usecase.NewUsecase(repo, atomicRepo)
 	handler := handler.NewHandler(log, uc)
 
 	route.Register(e, handler)

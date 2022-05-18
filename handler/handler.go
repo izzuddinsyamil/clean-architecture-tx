@@ -15,6 +15,7 @@ type usecase interface {
 	GetUserList(ctx context.Context) (u []model.User, err error)
 	GetUserById(ctx context.Context, id int) (u model.User, err error)
 	CreateUser(ctx context.Context, name string, balance int) (err error)
+	Transact(ctx context.Context, senderId, receiverId, amount int) (err error)
 }
 
 type handler struct {
@@ -78,4 +79,20 @@ func (h *handler) HandleCreateUser(c echo.Context) error {
 	}
 
 	return sendCreatedResponse(c, nil)
+}
+
+func (h *handler) HandleTransact(c echo.Context) error {
+	p := new(TransactRequest)
+	if err := c.Bind(p); err != nil {
+		h.log.Error(err)
+		return sendBadRequestResponse(c, nil, "invalid request param")
+	}
+
+	err := h.uc.Transact(c.Request().Context(), p.SenderId, p.ReceiverId, p.Amount)
+	if err != nil {
+		h.log.Error(err)
+		return sendInternalErrorResponse(c, nil, "server error")
+	}
+
+	return sendSuccessResponse(c, p)
 }
