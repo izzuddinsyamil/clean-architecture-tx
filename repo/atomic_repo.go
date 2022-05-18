@@ -10,8 +10,8 @@ import (
 	"github.com/palantir/stacktrace"
 )
 
-type AtomicRepository interface {
-	Atomic(ctx context.Context, fn func(r AtomicRepository) error) error
+type Repository interface {
+	Atomic(ctx context.Context, fn func(r Repository) error) error
 	GetUser(ctx context.Context) (u []model.User, err error)
 	GetUserById(ctx context.Context, id int) (u model.User, err error)
 	CreateUser(ctx context.Context, name string, balance int) (err error)
@@ -41,19 +41,19 @@ type Queries struct {
 	db DBTX
 }
 
-type atomicRepo struct {
+type repo struct {
 	conn *sql.DB
 	db   *Queries
 }
 
-func NewAtomicRepo(db *sql.DB) AtomicRepository {
-	return &atomicRepo{
+func NewRepo(db *sql.DB) Repository {
+	return &repo{
 		conn: db,
 		db:   New(db),
 	}
 }
 
-func (r *atomicRepo) Atomic(ctx context.Context, fn func(r AtomicRepository) error) (err error) {
+func (r *repo) Atomic(ctx context.Context, fn func(r Repository) error) (err error) {
 	tx, err := r.conn.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return
@@ -74,7 +74,7 @@ func (r *atomicRepo) Atomic(ctx context.Context, fn func(r AtomicRepository) err
 		}
 	}()
 
-	newRepo := &atomicRepo{
+	newRepo := &repo{
 		conn: r.conn,
 		db:   New(tx),
 	}
@@ -83,12 +83,13 @@ func (r *atomicRepo) Atomic(ctx context.Context, fn func(r AtomicRepository) err
 	return
 }
 
-func (r *atomicRepo) GetUser(ctx context.Context) (u []model.User, err error) {
+func (r *repo) GetUser(ctx context.Context) (u []model.User, err error) {
 	var (
 		tracer = "repo.GetUser"
 		q      = `
 		select id, name, balance
-		from users`
+		from users
+		order by id asc`
 	)
 
 	rows, err := r.conn.QueryContext(ctx, q)
@@ -111,7 +112,7 @@ func (r *atomicRepo) GetUser(ctx context.Context) (u []model.User, err error) {
 	return
 }
 
-func (r *atomicRepo) GetUserById(ctx context.Context, id int) (u model.User, err error) {
+func (r *repo) GetUserById(ctx context.Context, id int) (u model.User, err error) {
 	var (
 		tracer = "repo.GetUserById"
 		q      = `
@@ -133,7 +134,7 @@ func (r *atomicRepo) GetUserById(ctx context.Context, id int) (u model.User, err
 	return
 }
 
-func (r *atomicRepo) CreateUser(ctx context.Context, name string, balance int) (err error) {
+func (r *repo) CreateUser(ctx context.Context, name string, balance int) (err error) {
 	var (
 		tracer = "repo.CreateUser"
 		q      = `
@@ -149,7 +150,7 @@ func (r *atomicRepo) CreateUser(ctx context.Context, name string, balance int) (
 	return
 }
 
-func (r *atomicRepo) DeductBalance(ctx context.Context, userId, amount int) (err error) {
+func (r *repo) DeductBalance(ctx context.Context, userId, amount int) (err error) {
 	var (
 		tracer = "repo.DeductBalance"
 		q      = `
@@ -167,7 +168,7 @@ func (r *atomicRepo) DeductBalance(ctx context.Context, userId, amount int) (err
 	return
 }
 
-func (r *atomicRepo) AddBalance(ctx context.Context, userId, amount int) (err error) {
+func (r *repo) AddBalance(ctx context.Context, userId, amount int) (err error) {
 	var (
 		tracer = "repo.AddBalance"
 		q      = `

@@ -30,8 +30,7 @@ func main() {
 	}
 
 	repo := repository.NewRepo(db)
-	atomicRepo := repository.NewAtomicRepo(db)
-	uc := usecase.NewUsecase(repo, atomicRepo)
+	uc := usecase.NewUsecase(repo)
 	handler := handler.NewHandler(log, uc)
 
 	route.Register(e, handler)
