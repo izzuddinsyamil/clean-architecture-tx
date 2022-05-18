@@ -49,11 +49,11 @@ func TestTransact(t *testing.T) {
 			senderId:   1,
 			receiverId: 2,
 			amount:     1000,
-			errWant:    nil,
+			errWant:    errors.New("some db error"),
 			repo: func() repository.Repository {
 				repoMock := &mocks.Repository{}
 				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(repo.Repository) error")).
-					Return(nil).
+					Return(errors.New("some db error")).
 					Run(func(args mock.Arguments) {
 						arg := args.Get(1).(func(repository.Repository) error)
 
@@ -70,11 +70,11 @@ func TestTransact(t *testing.T) {
 			senderId:   1,
 			receiverId: 2,
 			amount:     1000,
-			errWant:    nil,
+			errWant:    errors.New("some db error"),
 			repo: func() repository.Repository {
 				repoMock := &mocks.Repository{}
 				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(repo.Repository) error")).
-					Return(nil).
+					Return(errors.New("some db error")).
 					Run(func(args mock.Arguments) {
 						arg := args.Get(1).(func(repository.Repository) error)
 
