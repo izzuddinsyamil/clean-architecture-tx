@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os"
 	"repo-pattern-w-trx-management/handler"
-	repository "repo-pattern-w-trx-management/repo"
+	repository "repo-pattern-w-trx-management/repo/pg"
 	"repo-pattern-w-trx-management/route"
 	"repo-pattern-w-trx-management/usecase"
 

@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	repository "repo-pattern-w-trx-management/repo"
+	repository "repo-pattern-w-trx-management/repo/pg"
 )
 
 type usecase struct {

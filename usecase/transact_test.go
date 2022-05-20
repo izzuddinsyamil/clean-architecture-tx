@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
-	repository "repo-pattern-w-trx-management/repo"
-	"repo-pattern-w-trx-management/repo/mocks"
+	repository "repo-pattern-w-trx-management/repo/pg"
+	"repo-pattern-w-trx-management/repo/pg/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/mock"

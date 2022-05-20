@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	repository "repo-pattern-w-trx-management/repo"
+	repository "repo-pattern-w-trx-management/repo/pg"
 )
 
 func (uc *usecase) Transact(ctx context.Context, senderId, receiverId, amount int) (err error) {
