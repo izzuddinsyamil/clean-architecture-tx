@@ -26,7 +26,7 @@ func TestTransact(t *testing.T) {
 			errWant:    nil,
 			repo: func() repository.Repository {
 				repoMock := &mocks.Repository{}
-				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(repo.Repository) error")).
+				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(pg_repo.Repository) error")).
 					Return(nil).
 					Run(func(args mock.Arguments) {
 						arg := args.Get(1).(func(repository.Repository) error)
@@ -52,7 +52,7 @@ func TestTransact(t *testing.T) {
 			errWant:    errors.New("some db error"),
 			repo: func() repository.Repository {
 				repoMock := &mocks.Repository{}
-				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(repo.Repository) error")).
+				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(pg_repo.Repository) error")).
 					Return(errors.New("some db error")).
 					Run(func(args mock.Arguments) {
 						arg := args.Get(1).(func(repository.Repository) error)
@@ -73,7 +73,7 @@ func TestTransact(t *testing.T) {
 			errWant:    errors.New("some db error"),
 			repo: func() repository.Repository {
 				repoMock := &mocks.Repository{}
-				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(repo.Repository) error")).
+				repoMock.On("Atomic", ctx, mock.AnythingOfType("func(pg_repo.Repository) error")).
 					Return(errors.New("some db error")).
 					Run(func(args mock.Arguments) {
 						arg := args.Get(1).(func(repository.Repository) error)
