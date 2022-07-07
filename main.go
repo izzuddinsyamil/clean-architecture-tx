@@ -26,7 +26,8 @@ func main() {
 	connStr := "host=localhost port=5432 user=postgres dbname=local password=1234 sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
+		log.Println(err)
 	}
 
 	repo := repository.NewRepo(db)

@@ -1,5 +1,10 @@
 package handler
 
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type GetUserRequest struct {
 	Id string `param:"id"`
 }

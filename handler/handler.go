@@ -4,6 +4,7 @@ import (
 	"context"
 	"repo-pattern-w-trx-management/model"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -24,6 +25,32 @@ func NewHandler(l *logrus.Logger, uc usecase) *handler {
 		log: l,
 		uc:  uc,
 	}
+}
+
+func (h *handler) HandleLogin(c echo.Context) error {
+	param := new(LoginRequest)
+
+	type customClaims struct {
+		Username string `json:"username"`
+		jwt.StandardClaims
+	}
+
+	claims := customClaims{
+		Username: param.Username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: 15000,
+			Issuer:    "testIssuer",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte("secureSecretText"))
+	if err != nil {
+		h.log.Error(err)
+		return sendInternalErrorResponse(c, nil, "server error")
+	}
+
+	return sendSuccessResponse(c, signedToken)
 }
 
 func (h *handler) HandleGetUser(c echo.Context) error {
