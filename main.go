@@ -1,13 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"os"
+	"repo-pattern-w-trx-management/db"
 	"repo-pattern-w-trx-management/handler"
 	repository "repo-pattern-w-trx-management/repo/pg"
 	"repo-pattern-w-trx-management/route"
 	"repo-pattern-w-trx-management/usecase"
 
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
@@ -22,12 +23,22 @@ func main() {
 	log.SetFormatter(&logrus.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 
-	// init db
-	connStr := "host=localhost port=5432 user=postgres dbname=local password=1234 sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+	err := godotenv.Load()
 	if err != nil {
-		// log.Fatal(err)
-		log.Println(err)
+		log.Fatal("Error loading .env file", err)
+	}
+
+	// init db
+	dbInit := db.NewDbinitiator(log)
+	db, err := dbInit.InitSql(
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PASSWORD"),
+	)
+	if err != nil {
+		log.Fatal("Error connecting db", err)
 	}
 
 	repo := repository.NewRepo(db)
