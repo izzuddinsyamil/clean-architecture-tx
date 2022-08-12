@@ -10,13 +10,80 @@ import (
 	"github.com/palantir/stacktrace"
 )
 
+type CompRepo interface {
+	Atomic(ctx context.Context, fn func(r CompRepo) error) error
+	Repository
+	TxCreator
+}
+
+type compRepo struct {
+	conn *sql.DB
+	repo
+	txCreatorRepo
+}
+
+func NewCompRepo(db *sql.DB) CompRepo {
+	return &compRepo{
+		conn: db,
+		repo: repo{
+			conn: db,
+			db:   db,
+		},
+		txCreatorRepo: txCreatorRepo{
+			conn: db,
+			db:   db,
+		},
+	}
+}
+
+func (cr *compRepo) Atomic(ctx context.Context, fn func(r CompRepo) error) (err error) {
+	tx, err := cr.conn.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				err = fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)
+			}
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	newRepo := &repo{
+		conn: cr.conn,
+		db:   tx,
+	}
+
+	newTxCreatorRepo := &txCreatorRepo{
+		conn: cr.conn,
+		db:   tx,
+	}
+
+	newCr := &compRepo{
+		conn:          cr.conn,
+		repo:          *newRepo,
+		txCreatorRepo: *newTxCreatorRepo,
+	}
+
+	err = fn(newCr)
+	return
+}
+
 type Repository interface {
-	Atomic(ctx context.Context, fn func(r Repository) error) error
+	// Atomic(ctx context.Context, fn func(r Repository) error) error
 	GetUser(ctx context.Context) (u []model.User, err error)
 	CreateUser(ctx context.Context, name string, balance int) (err error)
 	DeductBalance(ctx context.Context, userId, amount int) (err error)
 	AddBalance(ctx context.Context, userId, amount int) (err error)
-	CreateTransaction(ctx context.Context, senderId, receiverId, amount int) (err error)
+	// CreateTransaction(ctx context.Context, senderId, receiverId, amount int) (err error)
 }
 
 type DBTX interface {
@@ -149,18 +216,18 @@ func (r *repo) AddBalance(ctx context.Context, userId, amount int) (err error) {
 	return
 }
 
-func (r *repo) CreateTransaction(ctx context.Context, senderId, receiverId, amount int) (err error) {
-	var (
-		tracer = "repo.AddBalance"
-		q      = `
-		insert into transactions (amount, receiver_id, sender_id) values ($1, $2, $3)`
-	)
+// func (r *repo) CreateTransaction(ctx context.Context, senderId, receiverId, amount int) (err error) {
+// 	var (
+// 		tracer = "repo.AddBalance"
+// 		q      = `
+// 		insert into transactions (amount, receiver_id, sender_id) values ($1, $2, $3)`
+// 	)
 
-	_, err = r.db.ExecContext(ctx, q, amount, receiverId, senderId)
-	if err != nil {
-		err = stacktrace.PropagateWithCode(err, errCode.EcodeInternal, tracer)
-		return
-	}
+// 	_, err = r.db.ExecContext(ctx, q, amount, receiverId, senderId)
+// 	if err != nil {
+// 		err = stacktrace.PropagateWithCode(err, errCode.EcodeInternal, tracer)
+// 		return
+// 	}
 
-	return
-}
+// 	return
+// }
